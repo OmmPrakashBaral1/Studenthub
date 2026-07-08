@@ -1,20 +1,26 @@
 version: 0.2
+
 phases:
   pre_build:
     commands:
-      - echo Logging into ECR...
-      - aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin $ECR_URI
+      - echo "Logging into ECR..."
+      - echo "AWS_REGION=$AWS_REGION"
+      - echo "ECR_URI=$ECR_URI"
+      - aws sts get-caller-identity
+      - aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin 305718150619.dkr.ecr.ap-southeast-2.amazonaws.com
+
   build:
     commands:
-      - echo Building Docker image.
+      - echo "Building Docker image..."
       - docker build -t studenthub-app .
       - docker tag studenthub-app:latest $ECR_URI:latest
+
   post_build:
     commands:
-      - echo Pushing image to ECR..
+      - echo "Pushing image..."
       - docker push $ECR_URI:latest
-      - echo Writing imagedefinitions.json...
       - printf '[{"name":"studenthub-container","imageUri":"%s"}]' $ECR_URI:latest > imagedefinitions.json
+
 artifacts:
   files:
     - imagedefinitions.json
